@@ -30,12 +30,14 @@ class Owners(Base):
                                       nullable=True)
 
     def createOwner(name:str):
+        logger.debug(msg="create owner")
         with Session(engine) as session:
             with session.begin():
                 new_owner = Owners(name=name)
                 session.add(new_owner)
     
     def updateOwner(id:int,name:str):
+        logger.debug(msg="update owner")
         with Session(engine) as session:
             with session.begin():
                 session.query(Owners).filter(Owners.id == id).update(
@@ -43,17 +45,20 @@ class Owners(Base):
                 )
                 
     def deleteOwner(id:int):
+        logger.debug(msg="delete owner")
         with Session(engine) as session:
             with session.begin():
                 owner = session.get(Owners,id)
                 session.delete(owner)
     
     def getOwner(id:int):
+        logger.debug(msg="request owner")
         with Session(engine) as session:
             owner = session.get(Owners,id)
         return owner
 
     def getOwners():
+        logger.debug(msg="request all owners")
         with Session(engine) as session:
             owners = session.query(Owners).all()
         return owners
@@ -99,6 +104,7 @@ class AmoIntegrationData(Base):
                                                 refresh_token=refresh_token,
                                                 access_token=access_token,
                                                 token_receipt_date=token_receipt_date)
+                logger.debug(msg="create amo_data")
                 session.add(integration)
 
     def updateData(id,owner_id=None,
@@ -132,7 +138,7 @@ class AmoIntegrationData(Base):
             data.access_token = access_token
         if token_receipt_date != None:
             data.token_receipt_date = token_receipt_date
-        
+        logger.debug(msg="update amo_data")
         with Session(engine) as session:
             with session.begin():
                 session.query(AmoIntegrationData).filter(AmoIntegrationData.id == id).update(
@@ -151,14 +157,17 @@ class AmoIntegrationData(Base):
     def getData(id):
         with Session(engine) as session:
             integration = session.get(AmoIntegrationData,id)
+        logger.debug(msg="request amo_data")
         return integration
 
     def getAllData():
         with Session(engine) as session:
             all_data = session.query(AmoIntegrationData).all()
+        logger.debug(msg="request all amo_data")
         return all_data
 
     def deleteData(id):
+        logger.debug(msg="delete amo_data")
         with Session(engine) as session:
             with session.begin():
                 integration = session.get(AmoIntegrationData,id)
@@ -177,6 +186,7 @@ class WazzapIntegrationData(Base):
     access_token: Mapped[str] = mapped_column(String(100))
 
     def createData(owner_id,integration_name,access_token):
+        logger.debug(msg="create wz_data")
         with Session(engine) as session:
             with session.begin():
                 integration =  WazzapIntegrationData(owner_id=owner_id,
@@ -185,6 +195,7 @@ class WazzapIntegrationData(Base):
                 session.add(integration)
     
     def updateData(id,owner_id=None,integration_name=None,access_token=None):
+        logger.debug(msg="update wz_data")
         data = WazzapIntegrationData.getData(id=id)
         if owner_id != None:
             data.owner_id = owner_id
@@ -203,16 +214,19 @@ class WazzapIntegrationData(Base):
                 )
 
     def getData(id):
+        logger.debug(msg="request wz_data")
         with Session(engine) as session:
             integration = session.get(WazzapIntegrationData,id)
         return integration
     
     def getAllData():
+        logger.debug(msg="request all wz_data")
         with Session(engine) as session:
             all_data = session.query(WazzapIntegrationData).all()
         return all_data
 
     def deleteData(id):
+        logger.debug(msg="delete wz_data")
         with Session(engine) as session:
             with session.begin():
                 integration = session.get(WazzapIntegrationData,id)

@@ -14,15 +14,23 @@ class Amo:
             header=self.header
         )
 
-        self.Lead = Lead(
+        self.lead = Lead(
             basic_url=self.basic_url,
             header=self.header
         )
+
+        # self.event = Event(
+        #     basic_url=self.basic_url,
+        #     header=self.header
+        # )
     
     def checkConnection(self):
         url = self.basic_url + f"api/v4/account"
         response = requests.get(url=url,headers=self.header)
-        return response.status_code
+        if response.status_code == 200:
+            return True
+        else:
+            return False
      
     def requestTokens(self,request_type):
         if request_type not in ["authorization_code","refresh_token"]:
@@ -45,13 +53,26 @@ class Amo:
         response = requests.post(url=url,
                                  headers={"Content-Type":"application/json"},
                                  json=data)
-        return response.status_code, response.json()
+        if response.status_code != 200:
+            return False
+        else:
+            response = response.json()
+            return response["refresh_token"],response["access_token"]
 
     def requestAccount(self):
         url = self.basic_url + f"api/v4/account"
         response = requests.get(url=url,headers=self.header)
         return response.json()
 
+    @staticmethod
+    def getMainContactsId(leads):
+        contacts_id = []
+        for lead in leads:
+            if "_embedded" in lead.keys():
+                for contact in lead["_embedded"]["contacts"]:
+                    if contact["is_main"] == True:
+                        contacts_id.append(contact["id"])
+        return contacts_id
 
 class Contact:
     def __init__(self, basic_url, header) -> None:
@@ -96,17 +117,68 @@ class Lead:
         if _with != None:
             url = url + "&with=" + "&with=".join(_with)
         if _filter != None:
-            url = url + "&" + "&".join([str(f"filter[{key}]={_filter[key]}") for key in _filter.keys()])
+            url = url + "&" + "&".join([f"filter[{key}]={_filter[key]}" for key in _filter.keys()])
         
         if _page == None:
             page = 0
-            request_page = []
+            request = []
             while True:
                 page += 1
                 response = requests.get(url=url+f"&page={page}",headers=self.header)
-                print(f"страница: {page} {response.status_code}")
+                logger.info(msg=f"page: {page}|| response_code: {response.status_code}")
                 if response.status_code == 200:
-                    request_page += response.json()["_embedded"]["leads"]
+                    request += response.json()["_embedded"]["leads"]
                 else:
                     break
-        return request_page
+        return request
+
+
+# class Event:
+#     def __init__(self, basic_url, header) -> None:
+#         self.basic_url = basic_url
+#         self.header = header
+    
+#     def requestEvent(self,event_id):
+#         url = self.basic_url + f"api/v4/events/{event_id}"
+#         response = requests.get(url=url,headers=self.header)
+#         return response.json()
+
+#     def requestEvents(
+    #         self,
+    #         _page:int=None,
+    #         _limit:int=None,
+    #         _with:list=None,
+    #         _filter:dict=None,
+    # ):
+    
+    #     url = f"{self.basic_url}api/v4/events?"
+    #     if _limit != None:
+    #         url += f"limit={_limit}"
+    #     if _with != None:
+    #         url = url + "&with=" + "&with=".join(_with)
+    #     if _filter != None:
+    #         url = url + "&" + "&".join([f"filter[{key}]={_filter[key]}" for key in _filter.keys()])
+    
+    #     if _page == None:
+    #         page = 0
+    #         request = []
+    #         while True:
+    #             page += 1
+    #             response = requests.get(url=url+f"&page={page}",headers=self.header)
+    #             logger.info(msg=f"page: {page}|| response_code: {response.status_code}")
+    #             if response.status_code == 200:
+    #                 request += response.json()["_embedded"]["events"]
+    #             else:
+    #                 break
+    #     else:
+    #         page = 0
+    #         request = []
+    #         while page < _page:
+    #             page += 1
+    #             response = requests.get(url=url+f"&page={page}",headers=self.header)
+    #             logger.info(msg=f"page: {page}|| response_code: {response.status_code}")
+    #             if response.status_code == 200:
+    #                 request += response.json()["_embedded"]["events"]
+    #             else:
+    #                 break
+    #     return request

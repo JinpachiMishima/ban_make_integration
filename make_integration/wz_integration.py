@@ -1,5 +1,7 @@
 import requests
+import logging
 
+logger = logging.getLogger(__name__)
 
 def checkResponse(response):
     if (response.status_code // 100) == 4:
@@ -26,7 +28,7 @@ class Wazzup:
             "Content-Type": "application/json"
             }
 
-    def send_message(self,chennal_id,chat_id,text):
+    def sendMessage(self,chennal_id,chat_id,text):
         message_url = f"{self.basic_url}{Wazzup.request_api["send_message"]}"
         data = {
             "channelId":chennal_id,
@@ -35,7 +37,7 @@ class Wazzup:
             "text":text
             }
         response = requests.post(url=message_url,headers=self.headers,json=data)
-        print("отправка сообщения")
+        logger.info("send message to {}".format(chat_id))
         return response.status_code
     @staticmethod
     def correctPhone(phone):
@@ -45,5 +47,8 @@ class Wazzup:
         for num in phone[::-1]:
             if num in ["1","2","3","4","5","6","7","8","9","0"]:
                 correct_phone += num
-        correct_phone = "+7" + correct_phone[:10][::-1]
-        return correct_phone
+        if len(correct_phone) == 11:
+            correct_phone = "+7" + correct_phone[:10][::-1]
+            return correct_phone
+        else:
+            return False
